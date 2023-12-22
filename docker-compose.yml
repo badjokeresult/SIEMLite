@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  juice-shop:
+    image: bkimminich/juice-shop
+    ports:
+      - 8080:3000
+    container_name: web-server
+    environment:
+      - NODE_ENV=myConfig
+    volumes:
+      - ./web-server/config.yml:/juice-shop/config/myConfig.yml:ro
+      - web-server:/juice-shop
+      - ./web-server/webserver.sqlite:/juice-shop/data/juiceshop/sqlite:cached
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    ports:
+      - 15672:15672
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=rmuser
+      - RABBITMQ_DEFAULT_PASS=rmpass
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+
+  mongodb:
+    image: mongo:6-jammy
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=siem
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      - mongo:/data/db
+      - ./mongo-entrypoint:/docker-entrypoint-initdb.d
+      - mongoconfig:/data/configdb
+    networks:
+      - mongo_net
+
+volumes:
+  web-server:
+  rabbitmq:
+  mongo:
+  mongoconfig:
+
+networks:
+  mongo_net:
+    driver: bridge
